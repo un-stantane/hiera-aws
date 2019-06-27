@@ -7,7 +7,7 @@ class Hiera
       class RDS < Base
         def initialize(scope = {})
           super(scope)
-          @client = AWS::RDS::Client.new
+          @client = Aws::RDS::Client.new
         end
 
         # Override default key lookup to implement custom format. Examples:
@@ -21,12 +21,13 @@ class Hiera
 
           args = key.split
           return if args.shift != "rds_instances"
+	        attr = args.shift
           if args.length > 0
             tags = Hash[args.map { |t| t.split("=") }]
             db_instances_with_tags(tags)
           else
             db_instances
-          end.map { |i| prepare_instance_data(i) }
+          end.map { |i| prepare_instance_data(i,attr) }
         end
 
         private
@@ -54,12 +55,16 @@ class Hiera
 
         # Prepare RDS instance data for consumption by Puppet. For Puppet to
         # work, all hash keys have to be converted from symbols to strings.
-        def prepare_instance_data(hash)
-          {
-            "db_instance_identifier" => hash.fetch(:db_instance_identifier),
-            "endpoint"               => stringify_keys(hash.fetch(:endpoint)),
-            "engine"                 => hash.fetch(:engine)
-          }
+        def prepare_instance_data(hash,attr)
+
+	        case attr
+  	      when 'endpoint'
+            full = hash.fetch(:endpoint)
+            full.fetch(:address)
+          when 'db_instance_identifier'
+            hash.fetch(:db_instance_identifier)
+          end
+
         end
       end
     end

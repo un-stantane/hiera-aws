@@ -1,6 +1,5 @@
-require "hiera/backend/aws/elasticache"
 require "hiera/backend/aws/rds"
-require "hiera/backend/aws/cloudformation"
+require "hiera/backend/aws/efs"
 
 class Hiera
   module Backend
@@ -8,10 +7,10 @@ class Hiera
     class Aws_backend # rubocop:disable ClassAndModuleCamelCase
       def initialize
         begin
-          require "aws-sdk-v1"
+          require "aws-sdk"
         rescue LoadError
           require "rubygems"
-          require "aws-sdk-v1"
+          require "aws-sdk"
         end
 
         setup_aws_config
@@ -70,12 +69,10 @@ class Hiera
         return nil unless elements[0] == "aws"
 
         case elements[1]
-        when "elasticache"
-          Hiera::Backend::Aws::ElastiCache.new
         when "rds"
           Hiera::Backend::Aws::RDS.new
-        when "cloudformation"
-          Hiera::Backend::Aws::Cloudformation.new
+        when "efs"
+          Hiera::Backend::Aws::EFS.new
         else
           nil
         end
